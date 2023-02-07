@@ -22,21 +22,21 @@ app.get('/', (req, res) => {
   res.send('Hello World!');
 });
 
-app.post("/",(req,res) => {
-  console.log(req.body);
+// app.post("/",(req,res) => {
+//   console.log(req.body);
 
-  res.send("기본 URI에 POST 메소드가 정상적으로 실행되었습니다.");
-})
+//   res.send("기본 URI에 POST 메소드가 정상적으로 실행되었습니다.");
+// })
 
-app.get("/",(req,res)=> {
-  console.log(req.query);
+// app.get("/",(req,res)=> {
+//   console.log(req.query);
 
-  res.status(400).json({
-    "KeyKey" : "value 입니다.",
-    "이름입니다" : "이름일까요?",
+//   res.status(400).json({
+//     "KeyKey" : "value 입니다.",
+//     "이름입니다" : "이름일까요?",
 
-  });
-})
+//   });
+// })
 
 // app.get("/:id", (req,res) => {
 //   console.log(req.params);
