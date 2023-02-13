@@ -1,10 +1,14 @@
 const express = require("express");
 
 const router = express.Router();
+const Goods = require("../schemas/goods.js");
+const Cart = require("../schemas/cart.js");
+const authMiddleware = require("../middlewares/auth_middlesare")
+const { exists } = require("../schemas/goods.js");
 
 // /routes/goods.js
 
-const Goods = require("../schemas/goods.js");
+
 
 router.get('/goods', async (req,res) => {
     const {category} = req.query;
@@ -64,17 +68,38 @@ router.post("/goods", async (req, res) => {
 });
 
 
-//cart에 대해서 get post put delete
 
 
-const Cart = require("../schemas/cart.js");
 
-const { exists } = require("../schemas/goods.js");
-  router.post("/goods/:goodsId/cart",async(req,res) =>{
+//장바구니 조회
+router.get("/goods/cart", authMiddleware, async (req, res) => {
+  const {userId} = res.locals.user;
+  const carts = await Cart.find({userId : userId});
+  
+  const goodsIds = carts.map((cart) => {return cart.goodsId});
+
+  const goods = await Goods.find({ goodsId: goodsIds });
+
+  const results = carts.map((cart) => {
+		return {
+			quantity: cart.quantity,
+			goods: goods.find((item) => item.goodsId === cart.goodsId)
+		};
+  });
+
+  res.json({
+    carts: results,
+  });
+});
+
+
+
+  router.post("/goods/:goodsId/cart", authMiddleware, async(req,res) =>{
+    const {userId} = res.locals.user;
     const {goodsId} = req.params;
     const {quantity} = req.body;
 
-    const existsCarts = await Cart.find({goodsId});
+    const existsCarts = await Cart.find({userId, goodsId});
     if(existsCarts.length){
         return res.status(400).json({
         success:false,
@@ -82,31 +107,35 @@ const { exists } = require("../schemas/goods.js");
         });
     };
 
-    await Cart.create({goodsId,quantity});
+    await Cart.create({userId, goodsId,quantity});
 
     res.json({result:"success"});
   })
 
-  router.put("/goods/:goodsId/cart", async (req,res) => {
+
+  router.put("/goods/:goodsId/cart",authMiddleware, async (req,res) => {
+    const {userId} = res.locals.user;
     const {goodsId} = req.params;
     const {quantity} = req.body;
 
-    const existsCarts = await Cart.find({goodsId})
+    const existsCarts = await Cart.find({userId, goodsId})
     if(existsCarts.length){
         await Cart.updateOne(
-            {goodsId: goodsId},
+            {userId, goodsId: goodsId},
             {$set:{quantity:quantity}}
         )
     }
     res.status(200).json({success:true});
   })
 
-  router.delete("/goods/:goodsId/cart", async (req,res)=>{
+
+  router.delete("/goods/:goodsId/cart",authMiddleware, async (req,res)=>{
+    const {userId} = res.locals.user;
     const {goodsId} = req.params;
 
-    const existsCarts = await Cart.find({goodsId});
+    const existsCarts = await Cart.find({userId, goodsId});
     if(existsCarts.length){
-        await Cart.deleteOne({goodsId});
+        await Cart.deleteOne({userId, goodsId});
     };
 
     res.json({result: "success"});
